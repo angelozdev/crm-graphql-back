@@ -1,19 +1,22 @@
-import { gql } from 'apollo-server'
+import { Field, ID, ObjectType } from 'type-graphql'
 
 /* Schema */
-const typeDefs = gql`
-  type Course {
-    title: String
-  }
+@ObjectType({ description: 'The recipe model' })
+class Recipe {
+  @Field(() => ID)
+  id: string
 
-  type Technology {
-    technology: String
-  }
+  @Field()
+  title: string
 
-  type Query {
-    getCourses: [Course]
-    getTechnologies: [Technology]
-  }
-`
+  @Field({ nullable: true })
+  description?: string
 
-export default typeDefs
+  @Field(() => Date)
+  creationDate: Date
+
+  @Field((type) => [String])
+  ingredients: string[]
+}
+
+export default Recipe

@@ -1,11 +1,12 @@
-import { ApolloServer } from 'apollo-server'
-import resolvers from './graphql/resolvers'
-import typeDefs from './graphql/schema'
+import 'reflect-metadata'
+import server from './app'
 
-/* Server */
-const server = new ApolloServer({ typeDefs, resolvers })
+async function main() {
+  const app = await server()
 
-/* Correr el servidor */
-server.listen().then(({ url }) => {
-  console.log(`Server ready at http:localhost:${url}`)
-})
+  app.listen().then(({ url }) => {
+    console.log(`Server ready at http:localhost:${url}`)
+  })
+}
+
+main()
