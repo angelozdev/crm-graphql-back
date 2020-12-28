@@ -3,6 +3,7 @@ import {
   Arg,
   Args,
   ArgsType,
+  Ctx,
   Field,
   InputType,
   Int,
@@ -115,7 +116,9 @@ class RecipeArgs {
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
-  getRecipes(@Args() { take, contain }: RecipeArgs) {
+  getRecipes(@Args() { take, contain }: RecipeArgs, @Ctx('user') user: Object) {
+    console.log(user)
+
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve(

@@ -7,7 +7,10 @@ import { buildSchema } from 'type-graphql'
 
 async function startServer() {
   const server = new ApolloServer({
-    schema: await buildSchema({ resolvers: [Resolvers] })
+    schema: await buildSchema({ resolvers: [Resolvers] }),
+    context: () => {
+      return { user: { name: 'angelo', age: 23 } }
+    }
   })
 
   return server
