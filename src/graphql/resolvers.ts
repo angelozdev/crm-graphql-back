@@ -1,5 +1,15 @@
-import { ArrayMaxSize, Length } from 'class-validator'
-import { Arg, Field, InputType, Mutation, Query, Resolver } from 'type-graphql'
+import { ArrayMaxSize, Length, Max, Min } from 'class-validator'
+import {
+  Arg,
+  Args,
+  ArgsType,
+  Field,
+  InputType,
+  Int,
+  Mutation,
+  Query,
+  Resolver
+} from 'type-graphql'
 import Recipe from './schema'
 
 const recipes: Recipe[] = [
@@ -90,15 +100,60 @@ class NewRecipeInput {
   ingredients: string[]
 }
 
+@ArgsType()
+class RecipeArgs {
+  @Field(() => Int)
+  @Max(50)
+  @Min(1)
+  take: number = 25
+
+  @Field(() => String, { nullable: true })
+  @Length(2, 20)
+  contain: string
+}
+
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
-  getRecipes() {
-    return Promise.resolve(recipes)
+  getRecipes(@Args() { take, contain }: RecipeArgs) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(
+          recipes
+            .filter((e) => {
+              if (contain) {
+                return (
+                  e.title.toLowerCase().includes(contain.toLowerCase()) ||
+                  e.description
+                    ?.toLowerCase()
+                    .includes(contain.toLowerCase()) ||
+                  e.ingredients
+                    .toString()
+                    .replace(/[\s'\[,\]"]/, '')
+                    .toLowerCase()
+                    .includes(contain.toLowerCase())
+                )
+              }
+
+              return e
+            })
+            .slice(0, take)
+        )
+      }, 300)
+    })
   }
 
   @Mutation(() => Recipe)
   createRecipe(@Arg('newRecipeData') newRecipeData: NewRecipeInput) {
+    recipes.push({
+      ...newRecipeData,
+      id:
+        'saddd' +
+        Math.floor(Math.random() * 3000) +
+        'asd' +
+        Math.floor(Math.random() * 3000),
+      creationDate: new Date()
+    })
     return Promise.resolve(newRecipeData)
   }
 }
