@@ -12,7 +12,7 @@ function connection() {
     useNewUrlParser: true,
     synchronize: true,
     logging: true,
-    entities: ['src/entity/**/*.ts'],
+    entities: ['src/entity/*.js'],
     useUnifiedTopology: true
   })
     .then(() => {

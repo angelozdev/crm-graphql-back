@@ -103,12 +103,12 @@ class NewRecipeInput {
 
 @ArgsType()
 class RecipeArgs {
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
   @Max(50)
   @Min(1)
   take: number = 25
 
-  @Field(() => String, { nullable: true })
+  @Field({ nullable: true })
   @Length(2, 20)
   contain: string
 }
@@ -116,7 +116,10 @@ class RecipeArgs {
 @Resolver(Recipe)
 class RecipeResolver {
   @Query(() => [Recipe])
-  getRecipes(@Args() { take, contain }: RecipeArgs, @Ctx('user') user: Object) {
+  getRecipes(
+    @Args() { contain, take }: RecipeArgs,
+    @Ctx('user') user: Object
+  ): Promise<Recipe[]> {
     console.log(user)
 
     return new Promise((resolve, reject) => {
