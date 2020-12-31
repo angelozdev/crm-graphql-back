@@ -9,6 +9,7 @@ import {
 } from 'type-graphql'
 import { getMongoRepository } from 'typeorm'
 import Client from '../../entity/Client'
+import bcrypt from 'bcryptjs'
 
 @ArgsType()
 class createNewClient {
@@ -34,7 +35,7 @@ class ClientResolver {
     const newClient = getMongoRepository(Client).create({
       updatedAt: new Date(),
       createdAt: new Date(),
-      password,
+      password: await bcrypt.hash(password, 15),
       email,
       first_name,
       last_name
