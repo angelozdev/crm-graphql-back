@@ -1,5 +1,6 @@
 import { createConnection } from 'typeorm'
 import config from './config'
+import Client from './entity/Client'
 
 const {
   typeorm: { dbname, password, username }
@@ -7,12 +8,13 @@ const {
 
 function connection() {
   return createConnection({
+    name: 'default',
     type: 'mongodb',
     url: `mongodb+srv://${username}:${password}@cluster0.pbvgr.mongodb.net/${dbname}?retryWrites=true&w=majority`,
     useNewUrlParser: true,
     synchronize: true,
     logging: true,
-    entities: ['src/entity/*.js'],
+    entities: [Client],
     useUnifiedTopology: true
   })
     .then(() => {

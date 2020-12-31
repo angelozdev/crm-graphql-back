@@ -11,7 +11,7 @@ import {
   Query,
   Resolver
 } from 'type-graphql'
-import Recipe from './schema'
+import Recipe from '../schema'
 
 const recipes: Recipe[] = [
   {
