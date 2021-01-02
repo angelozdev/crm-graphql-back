@@ -11,8 +11,7 @@ import {
 import { getMongoRepository } from 'typeorm'
 import User from '../../entity/User'
 import bcrypt from 'bcryptjs'
-import createToken from '../../utils/createToken'
-import config from '../../config'
+import { createToken, verifyToken } from '../../utils/jwtMethods'
 
 @ArgsType()
 class createNewUser {
@@ -32,7 +31,7 @@ class createNewUser {
 @ObjectType()
 class Token {
   @Field()
-  token: String
+  accessToken: String
 }
 
 /* Main resolver */
@@ -57,6 +56,18 @@ class UserResolver {
   @Query(() => [User])
   async getUsers() {
     return await getMongoRepository(User).find()
+  }
+
+  @Query(() => User)
+  async getUserByToken(@Arg('token') accessToken: string) {
+    const { id } = verifyToken(accessToken)
+    const user = await getMongoRepository(User).findOne(id)
+
+    if (!user) {
+      throw new Error('User does not exist')
+    }
+
+    return user
   }
 
   @Mutation(() => User)
@@ -87,7 +98,7 @@ class UserResolver {
       throw new Error('Passwords do not match')
     }
 
-    return { token: createToken(user, '24h') }
+    return { accessToken: createToken(user, '24h') }
   }
 }
 
