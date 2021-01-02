@@ -1,4 +1,4 @@
-import * as ClassValidator from 'class-validator'
+/* import * as ClassValidator from 'class-validator'
 import {
   Arg,
   Args,
@@ -165,3 +165,4 @@ class RecipeResolver {
 }
 
 export default RecipeResolver
+ */

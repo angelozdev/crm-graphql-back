@@ -86,12 +86,12 @@ class UserResolver {
   async login(@Arg('email') email: string, @Arg('password') password: string) {
     const user = await getMongoRepository(User).findOne({ email })
 
-    /* If the user exists */
+    // If the user exists
     if (!user?.email || !user.password) {
       throw new Error('User does not exist')
     }
 
-    /* Check passwords */
+    // Check passwords
     const doPasswordsMatch = await bcrypt.compare(password, user.password)
 
     if (!doPasswordsMatch) {

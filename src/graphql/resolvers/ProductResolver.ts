@@ -5,6 +5,7 @@ import {
   ArgsType,
   Field,
   Float,
+  InputType,
   Int,
   Mutation,
   Query,
@@ -12,7 +13,7 @@ import {
 } from 'type-graphql'
 
 @ArgsType()
-class NewProduct {
+class NewProductFields {
   @Field()
   name: string
 
@@ -23,23 +24,23 @@ class NewProduct {
   price: number
 }
 
+@InputType()
+class UpdateProductFields {
+  @Field({ nullable: true })
+  name: string
+
+  @Field(() => Int, { nullable: true })
+  quantity: number
+
+  @Field(() => Float, { nullable: true })
+  price: number
+}
+
 @Resolver()
 class ProductResolver {
-  @Mutation(() => Product)
-  async createProduct(@Args() { name, quantity, price }: NewProduct) {
-    const newProduct = await Product.create({
-      createdAt: new Date(),
-      name,
-      price,
-      quantity
-    }).save()
-
-    return newProduct
-  }
-
   @Query(() => [Product])
   async getProducts() {
-    return Product.find({})
+    return await Product.find({})
   }
 
   @Query(() => Product)
@@ -64,6 +65,38 @@ class ProductResolver {
     await Product.delete(product)
 
     return product
+  }
+
+  @Mutation(() => Product)
+  async createProduct(@Args() { name, quantity, price }: NewProductFields) {
+    const newProduct = await Product.create({
+      createdAt: new Date(),
+      name,
+      price,
+      quantity
+    }).save()
+
+    return newProduct
+  }
+
+  @Mutation(() => Product)
+  async updateProductById(
+    @Arg('id') id: string,
+    @Arg('input') { name, quantity, price }: UpdateProductFields
+  ) {
+    const product = await Product.findOne(id)
+
+    if (!product) {
+      throw new Error('Product not found')
+    }
+
+    await Product.update(product, {
+      name: name || product.name,
+      quantity: quantity || product.quantity,
+      price: price || product.price
+    })
+
+    return await Product.findOne(id)
   }
 }
 
