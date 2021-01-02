@@ -1,4 +1,4 @@
-import { ArrayMaxSize, Length, Max, Min } from 'class-validator'
+import * as ClassValidator from 'class-validator'
 import {
   Arg,
   Args,
@@ -89,27 +89,27 @@ const recipes: Recipe[] = [
 @InputType()
 class NewRecipeInput {
   @Field()
-  @Length(3, 30)
+  @ClassValidator.Length(3, 30)
   title: string
 
   @Field({ nullable: true })
-  @Length(10, 50)
+  @ClassValidator.Length(10, 50)
   description?: string
 
   @Field(() => [String])
-  @ArrayMaxSize(10)
+  @ClassValidator.ArrayMaxSize(10)
   ingredients: string[]
 }
 
 @ArgsType()
 class RecipeArgs {
   @Field(() => Int, { nullable: true })
-  @Max(50)
-  @Min(1)
+  @ClassValidator.Max(50)
+  @ClassValidator.Min(1)
   take: number = 25
 
   @Field({ nullable: true })
-  @Length(2, 20)
+  @ClassValidator.Length(2, 20)
   contain: string
 }
 

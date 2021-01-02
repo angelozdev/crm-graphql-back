@@ -1,5 +1,5 @@
 import config from '../config'
-import User from '../entity/User'
+import { User } from '../entity/'
 import jwt from 'jsonwebtoken'
 import { ObjectID } from 'typeorm'
 

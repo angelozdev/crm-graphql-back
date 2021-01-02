@@ -5,7 +5,6 @@ import {
   ObjectID,
   UpdateDateColumn,
   CreateDateColumn,
-  BaseEntity,
   ObjectIdColumn
 } from 'typeorm'
 

@@ -9,7 +9,7 @@ import {
   Resolver
 } from 'type-graphql'
 import { getMongoRepository } from 'typeorm'
-import User from '../../entity/User'
+import { User } from '../../entity/'
 import bcrypt from 'bcryptjs'
 import { createToken, verifyToken } from '../../utils/jwtMethods'
 

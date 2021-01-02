@@ -1,6 +1,6 @@
 import { createConnection } from 'typeorm'
 import config from './config'
-import User from './entity/User'
+import { User, Product } from './entity/'
 
 const {
   typeorm: { dbname, password, username }
@@ -14,7 +14,7 @@ function connection() {
     useNewUrlParser: true,
     synchronize: true,
     logging: true,
-    entities: [User],
+    entities: [User, Product],
     useUnifiedTopology: true
   })
     .then(() => {
