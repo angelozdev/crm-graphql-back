@@ -10,8 +10,8 @@ import {
 } from 'typeorm'
 
 @ObjectType()
-@Entity('clients')
-class Client {
+@Entity('users')
+class User {
   @Field(() => ID)
   @ObjectIdColumn()
   id: ObjectID
@@ -40,4 +40,4 @@ class Client {
   createdAt: Date
 }
 
-export default Client
+export default User

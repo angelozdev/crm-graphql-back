@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server'
 import Resolvers from './graphql/resolvers/resolvers'
-import ClientResolver from './graphql/resolvers/ClientResolver'
+import UsertResolver from './graphql/resolvers/UserResolver'
 import db from './database'
 import { buildSchema } from 'type-graphql'
 
@@ -9,7 +9,7 @@ import { buildSchema } from 'type-graphql'
 async function startServer() {
   await db()
   const server = new ApolloServer({
-    schema: await buildSchema({ resolvers: [Resolvers, ClientResolver] }),
+    schema: await buildSchema({ resolvers: [Resolvers, UsertResolver] }),
     context: () => {
       return { user: { name: 'angelo', age: 23 } }
     }
