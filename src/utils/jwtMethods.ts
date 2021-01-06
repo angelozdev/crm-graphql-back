@@ -3,7 +3,7 @@ import { User } from '../entity/'
 import jwt from 'jsonwebtoken'
 import { ObjectID } from 'typeorm'
 
-interface Payload {
+export interface Payload {
   id: string | ObjectID
   email: string
   first_name: string

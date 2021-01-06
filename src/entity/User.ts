@@ -5,8 +5,11 @@ import {
   ObjectID,
   UpdateDateColumn,
   CreateDateColumn,
-  ObjectIdColumn
+  ObjectIdColumn,
+  OneToMany,
+  Index
 } from 'typeorm'
+import Client from './Client'
 
 @ObjectType()
 @Entity('users')
@@ -24,7 +27,7 @@ class User {
   last_name: string
 
   @Field()
-  @Column({ unique: true })
+  @Column('string', { unique: true })
   email: string
 
   @Column()
