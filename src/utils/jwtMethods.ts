@@ -1,10 +1,10 @@
 import config from '../config'
-import { User } from '../entity/'
+import { UserType } from '../models'
 import jwt from 'jsonwebtoken'
-import { ObjectID } from 'typeorm'
+import { ObjectId } from 'mongodb'
 
 export interface Payload {
-  id: string | ObjectID
+  id: string
   email: string
   first_name: string
   last_name: string
@@ -25,7 +25,7 @@ export function verifyToken(token: string): Payload {
 }
 
 export function createToken(
-  user: User,
+  user: UserType,
   expiresIn: string | number = '24h'
 ): string {
   const secretWord = config.jwt.secret

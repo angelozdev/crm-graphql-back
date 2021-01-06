@@ -35,6 +35,7 @@
     "graphql": "^15.4.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.6.3",
+    "mongoose": "^5.11.10",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
     "typeorm": "0.2.28"

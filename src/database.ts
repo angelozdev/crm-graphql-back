@@ -1,22 +1,18 @@
-import { createConnection } from 'typeorm'
+import { connect, ConnectionOptions } from 'mongoose'
 import config from './config'
-import { User, Product, Client } from './entity/'
 
 const {
-  typeorm: { dbname, password, username }
+  database: { dbname, password, username }
 } = config
 
 function connection() {
-  return createConnection({
-    name: 'default',
-    type: 'mongodb',
-    url: `mongodb+srv://${username}:${password}@cluster0.pbvgr.mongodb.net/${dbname}?retryWrites=true&w=majority`,
+  const URI = `mongodb+srv://${username}:${password}@cluster0.pbvgr.mongodb.net/${dbname}?retryWrites=true&w=majority`
+  const options: ConnectionOptions = {
     useNewUrlParser: true,
-    synchronize: true,
-    logging: true,
-    entities: [User, Product, Client],
-    useUnifiedTopology: true
-  })
+    useUnifiedTopology: true,
+    useCreateIndex: true
+  }
+  return connect(URI, options)
     .then(() => {
       console.log('DB Connected')
     })

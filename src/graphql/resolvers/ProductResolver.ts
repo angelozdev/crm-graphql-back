@@ -1,4 +1,4 @@
-import { Product } from '../../entity'
+import { ProductType, Product } from '../../models'
 import {
   Arg,
   Args,
@@ -38,14 +38,14 @@ class UpdateProductFields {
 
 @Resolver()
 class ProductResolver {
-  @Query(() => [Product])
+  @Query(() => [ProductType])
   async getProducts() {
     return await Product.find({})
   }
 
-  @Query(() => Product)
+  @Query(() => ProductType)
   async getProductById(@Arg('id') id: string) {
-    const product = await Product.findOne(id)
+    const product = await Product.findById(id)
 
     if (!product) {
       throw new Error('Product not found')
@@ -54,49 +54,41 @@ class ProductResolver {
     return product
   }
 
-  @Mutation(() => Product)
+  @Mutation(() => ProductType)
   async deleteProductById(@Arg('id') id: string) {
-    const product = await Product.findOne(id)
-
-    if (!product) {
-      throw new Error('Product not found')
-    }
-
-    await Product.delete(product)
-
-    return product
+    return await Product.findByIdAndDelete(id)
   }
 
-  @Mutation(() => Product)
+  @Mutation(() => ProductType)
   async createProduct(@Args() { name, quantity, price }: NewProductFields) {
-    const newProduct = await Product.create({
+    return await Product.create({
       createdAt: new Date(),
       name,
       price,
       quantity
-    }).save()
-
-    return newProduct
+    })
   }
 
-  @Mutation(() => Product)
+  @Mutation(() => ProductType)
   async updateProductById(
     @Arg('id') id: string,
     @Arg('input') { name, quantity, price }: UpdateProductFields
   ) {
-    const product = await Product.findOne(id)
+    const product = await Product.findById(id)
 
     if (!product) {
       throw new Error('Product not found')
     }
 
-    await Product.update(product, {
-      name: name || product.name,
-      quantity: quantity || product.quantity,
-      price: price || product.price
-    })
-
-    return await Product.findOne(id)
+    return await Product.findByIdAndUpdate(
+      product,
+      {
+        name: name || product.name,
+        quantity: quantity || product.quantity,
+        price: price || product.price
+      },
+      { new: true }
+    )
   }
 }
 

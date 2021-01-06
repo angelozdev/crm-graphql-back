@@ -3,18 +3,19 @@ import {
   Args,
   ArgsType,
   Field,
+  InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver
 } from 'type-graphql'
-import { getMongoRepository } from 'typeorm'
-import { User } from '../../entity/'
+
+import { UserType, User } from '../../models'
 import bcrypt from 'bcryptjs'
 import { createToken, verifyToken } from '../../utils/jwtMethods'
 
-@ArgsType()
-class createNewUser {
+@InputType()
+class createNewUserFields {
   @Field()
   first_name: string
 
@@ -37,54 +38,38 @@ class Token {
 /* Main resolver */
 @Resolver()
 class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserType)
   async createUser(
-    @Args() { email, last_name, first_name, password }: createNewUser
+    @Arg('createNewUserFields')
+    { email, last_name, first_name, password }: createNewUserFields
   ) {
-    const newUser = getMongoRepository(User).create({
-      updatedAt: new Date(),
-      createdAt: new Date(),
+    return User.create({
       password: await bcrypt.hash(password, 15),
       email,
       first_name,
       last_name
     })
-
-    return await getMongoRepository(User).save(newUser)
   }
 
-  @Query(() => [User])
+  @Query(() => [UserType])
   async getUsers() {
-    return await getMongoRepository(User).find()
+    return await User.find({})
   }
 
-  @Query(() => User)
+  @Query(() => UserType)
   async getUserByToken(@Arg('token') accessToken: string) {
     const { id } = verifyToken(accessToken)
-    const user = await getMongoRepository(User).findOne(id)
-
-    if (!user) {
-      throw new Error('User does not exist')
-    }
-
-    return user
+    return await User.findById(id)
   }
 
-  @Mutation(() => User)
+  @Mutation(() => UserType)
   async deleteUserById(@Arg('id') id: string) {
-    const deletedUser = await getMongoRepository(User).findOne(id)
-
-    if (!deletedUser) {
-      throw new Error('User not found')
-    }
-    await getMongoRepository(User).delete(deletedUser)
-
-    return deletedUser
+    return await User.findByIdAndDelete(id)
   }
 
   @Mutation(() => Token)
   async login(@Arg('email') email: string, @Arg('password') password: string) {
-    const user = await getMongoRepository(User).findOne({ email })
+    const user = await User.findOne({ email })
 
     // If the user exists
     if (!user?.email || !user.password) {
