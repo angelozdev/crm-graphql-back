@@ -166,6 +166,30 @@ class ClientResolver {
 
     return updatedClient
   }
+
+  @Mutation(() => ClientTypes)
+  async deleteClientById(@Arg('id') id: string, @Ctx('user') user: Payload) {
+    /* Verificar si hay un token válido */
+    if (!user) throw new Error('Token invalid')
+
+    /* Encontrar el usuario que se quiere eliminar */
+    const client = await Client.findById(id)
+
+    /* Si no existe el usuario mostrar un error */
+    if (!client) throw new Error('Client not found')
+
+    /* Si no el cliente de este vendedor mostrar un error */
+    if (client.sellerId.toString() !== user.id) {
+      throw new Error('Invalid credentials')
+    }
+
+    /* Eliminar usuario */
+    const deletedClient = await Client.findByIdAndDelete(id)
+
+    if (!deletedClient) throw new Error('Client not found')
+
+    return deletedClient
+  }
 }
 
 export default ClientResolver
