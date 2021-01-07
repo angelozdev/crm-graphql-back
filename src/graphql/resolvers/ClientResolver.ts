@@ -60,6 +60,32 @@ class ClientResolver {
         })
     })
   }
+  @Query(() => ClientTypes)
+  async getClientById(
+    @Arg('id') id: string,
+    @Ctx('user') user: Payload
+  ): Promise<ClientTypes> {
+    /* Comprobar si hay un token válido */
+    if (!user) throw new Error('Token invalid')
+
+    /* Buscar el cliente por id */
+    const client = await Client.findById(id)
+
+    /* Si no existe lanzar un error */
+    if (!client) throw new Error('Client not found')
+
+    /* Si no coincide el id del token con el id del seller del cliente lanzar error */
+    if (client.sellerId.toString() !== user.id) {
+      throw new Error('Invalid credentials')
+    }
+
+    return new Promise((resolve, reject) => {
+      client.populate('sellerId').execPopulate((err, docs) => {
+        if (err) return reject(err)
+        resolve(docs)
+      })
+    })
+  }
 
   @Mutation(() => ClientTypes)
   async createClient(

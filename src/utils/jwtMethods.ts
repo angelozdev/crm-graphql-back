@@ -1,7 +1,6 @@
 import config from '../config'
 import { UserType } from '../models'
 import jwt from 'jsonwebtoken'
-import { ObjectId } from 'mongodb'
 
 export interface Payload {
   id: string
