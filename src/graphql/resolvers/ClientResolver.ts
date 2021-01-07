@@ -30,6 +30,24 @@ class CreateClientFields {
   phone_number: number
 }
 
+@InputType()
+class UpdateClientFields {
+  @Field({ nullable: true })
+  first_name: string
+
+  @Field({ nullable: true })
+  last_name: string
+
+  @Field({ nullable: true })
+  company: string
+
+  @Field({ nullable: true })
+  email: string
+
+  @Field(() => Int, { nullable: true })
+  phone_number: number
+}
+
 @Resolver()
 class ClientResolver {
   @Query(() => [ClientTypes])
@@ -109,6 +127,44 @@ class ClientResolver {
         console.error(err.message)
         return err
       })
+  }
+
+  @Mutation(() => ClientTypes)
+  async updateClientById(
+    @Arg('id') id: string,
+    @Arg('input') input: UpdateClientFields,
+    @Ctx('user') user: Payload
+  ): Promise<ClientTypes> {
+    /* Comprobar si hay un token válido */
+    if (!user) throw new Error('Token invalid')
+
+    /* Encontrar el usuario por id */
+    const { company, first_name, last_name, phone_number, email } = input
+    const client = await Client.findById(id)
+
+    /* Si no esxite el usuario salta un error */
+    if (!client) throw new Error('Client not found')
+
+    /* Si no es el usuario que edita sus propios clientes salta un error */
+    if (client.sellerId.toString() !== user.id) {
+      throw new Error('Invalid credentials')
+    }
+
+    const fields = {
+      company: company || client.company,
+      first_name: first_name || client.first_name,
+      last_name: last_name || client.last_name,
+      phone_number: phone_number || client.phone_number,
+      email: email || client.email
+    }
+
+    const updatedClient = await Client.findOneAndUpdate({ _id: id }, fields, {
+      new: true
+    })
+
+    if (!updatedClient) throw new Error('Client not found')
+
+    return updatedClient
   }
 }
 

@@ -10,7 +10,8 @@ function connection() {
   const options: ConnectionOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useCreateIndex: true
+    useCreateIndex: true,
+    useFindAndModify: false
   }
   return connect(URI, options)
     .then(() => {
