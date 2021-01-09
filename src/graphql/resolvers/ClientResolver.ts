@@ -10,7 +10,7 @@ import {
 } from 'type-graphql'
 import { ObjectID } from 'mongodb'
 import { ClientTypes, Client } from '../../models'
-import { Payload } from '../../utils/jwtMethods'
+import { Payload } from '../../types'
 
 @InputType()
 class CreateClientFields {

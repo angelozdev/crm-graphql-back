@@ -13,12 +13,12 @@ import {
   Resolver,
   UseMiddleware
 } from 'type-graphql'
-import { StatusesOrder } from '../../types'
-import { Payload } from 'utils/jwtMethods'
+import { StatusesOrder, Payload } from '../../types'
 import { hasToken } from '../middlewares'
 
 registerEnumType(StatusesOrder, { name: 'StatusesOrder' })
 
+/* INPUTS */
 @InputType()
 class OrderFields {
   @Field(() => ID)
@@ -43,8 +43,10 @@ class CreateOrderFields {
   status: StatusesOrder
 }
 
+/* RESOLVER */
 @Resolver()
 class OrderResolver {
+  /* QUERIES */
   @Query(() => [OrderTypes])
   @UseMiddleware(hasToken)
   async getAllOrders(): Promise<OrderTypes[]> {
@@ -68,6 +70,7 @@ class OrderResolver {
     }
   }
 
+  /* MUTATIONS */
   @Mutation(() => OrderTypes)
   @UseMiddleware(hasToken)
   async createOrder(

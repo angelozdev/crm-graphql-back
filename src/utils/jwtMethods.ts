@@ -1,16 +1,7 @@
 import config from '../config'
 import { UserType } from '../models'
 import jwt from 'jsonwebtoken'
-import { ObjectId } from 'mongoose'
-
-export interface Payload {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  iat: number
-  exp: number
-}
+import { Payload } from '../types'
 
 export function verifyToken(token: string): Payload {
   const secretWord = config.jwt.secret
@@ -19,7 +10,7 @@ export function verifyToken(token: string): Payload {
     throw new Error('Internal server error')
   }
 
-  const payload = jwt.verify(token, secretWord) as Payload
+  const payload: Payload = jwt.verify(token, secretWord) as Payload
 
   return payload
 }

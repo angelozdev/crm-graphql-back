@@ -15,7 +15,7 @@ class Recipe {
   @Field(() => Date)
   creationDate: Date
 
-  @Field((type) => [String])
+  @Field(() => [String])
   ingredients: string[]
 }
 
