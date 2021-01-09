@@ -1,4 +1,4 @@
-import { Order, OrderTypes } from '../../models'
+import { Client, Order, OrderTypes, Product } from '../../models'
 import { Schema } from 'mongoose'
 import {
   Arg,
@@ -48,17 +48,45 @@ class OrderResolver {
     @Arg('input') input: CreateOrderFields,
     @Ctx('user') user: Payload
   ): Promise<OrderTypes> {
+    /* Verificar si hay un token válido */
     if (!user) throw new Error('Token invalid')
 
     const { client, order, status, total } = input
 
-    return await Order.create({
+    /* Vefificar si el cliente existe */
+    const clientExists = await Client.findById(client)
+
+    if (!clientExists) throw new Error('Client not found')
+
+    /* Verificar si el usuario es el mismo */
+    if (clientExists.sellerId.toString() !== user.id) {
+      throw new Error('Invalid credentials')
+    }
+
+    /* Revisar stock */
+    for await (const p of input.order) {
+      const { productId } = p
+      const product = await Product.findById(productId)
+
+      if (!product) throw new Error('Product not found')
+      if (product.quantity < p.quantity) {
+        throw new Error(`Quantity not available for ${product.name}`)
+      } else {
+        product.quantity -= p.quantity
+        await product.save()
+      }
+    }
+
+    /* Crear el pedido */
+    const newOrder = new Order({
       client,
       order,
       status,
       total,
       seller: user.id
     })
+
+    return await newOrder.save()
   }
 }
 
