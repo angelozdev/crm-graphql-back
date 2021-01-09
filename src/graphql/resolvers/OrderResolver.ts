@@ -7,6 +7,7 @@ import {
   ID,
   InputType,
   Int,
+  MiddlewareFn,
   Mutation,
   Query,
   registerEnumType,
@@ -68,6 +69,23 @@ class OrderResolver {
       console.error(err.message)
       return err
     }
+  }
+
+  @Query(() => OrderTypes)
+  @UseMiddleware(hasToken)
+  async getOrderById(
+    @Arg('id') id: string,
+    @Ctx('user') user: Payload
+  ): Promise<OrderTypes> {
+    const order = await Order.findById(id)
+
+    if (!order) throw new Error('Order not found')
+
+    if (order.seller.toString() !== user.id) {
+      throw new Error('Credentials invalid')
+    }
+
+    return order
   }
 
   /* MUTATIONS */
