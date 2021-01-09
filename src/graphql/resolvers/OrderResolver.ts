@@ -172,16 +172,18 @@ class OrderResolver {
     }
 
     // Revisar el stock
-    for await (const p of order.products) {
-      const product = await Product.findById(p.productId)
+    if (products) {
+      for await (const p of products) {
+        const product = await Product.findById(p.productId)
 
-      if (!product) throw new Error('Product not found')
-      if (product.quantity < p.quantity) {
-        throw new Error('Quantity invalid')
-      } else {
-        product.quantity -= p.quantity
+        if (!product) throw new Error('Product not found')
+        if (product.quantity < p.quantity) {
+          throw new Error('Quantity invalid')
+        } else {
+          product.quantity -= p.quantity
 
-        await product.save()
+          await product.save()
+        }
       }
     }
     const updatedOrder = await Order.findByIdAndUpdate(
@@ -198,6 +200,27 @@ class OrderResolver {
     if (!updatedOrder) throw new Error('Order not found')
 
     return updatedOrder
+  }
+
+  @Mutation(() => OrderTypes)
+  @UseMiddleware(hasToken)
+  async deleteOrderById(
+    @Arg('id') id: string,
+    @Ctx('user') user: Payload
+  ): Promise<OrderTypes> {
+    // Verificar que el pedido existe
+    const order = await Order.findById(id)
+    if (!order) throw new Error('Order not found')
+
+    // Verificar que el vendedor es el mismo que està loggeado
+    if (order.seller.toString() !== user.id) {
+      throw new Error('Credentials invalid')
+    }
+
+    const deletedOrder = await Order.findByIdAndDelete(id)
+    if (!deletedOrder) throw new Error('Order not found')
+
+    return deletedOrder
   }
 }
 
