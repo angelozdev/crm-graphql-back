@@ -7,10 +7,12 @@ import {
   ID,
   InputType,
   Int,
+  MiddlewareFn,
   Mutation,
   Query,
   registerEnumType,
-  Resolver
+  Resolver,
+  UseMiddleware
 } from 'type-graphql'
 import { StatusesOrder } from '../../types'
 import { Payload } from 'utils/jwtMethods'
@@ -41,16 +43,31 @@ class CreateOrderFields {
   status: StatusesOrder
 }
 
+const hasToken: MiddlewareFn<{ user: Payload }> = ({ context }, next) => {
+  if (!context.user) throw new Error('Token invalid')
+
+  return next()
+}
+
 @Resolver()
 class OrderResolver {
+  @Query(() => [OrderTypes])
+  @UseMiddleware(hasToken)
+  async getAllOrders(): Promise<OrderTypes[]> {
+    try {
+      return await Order.find({})
+    } catch (err) {
+      console.error(err.message)
+      return err
+    }
+  }
+
   @Mutation(() => OrderTypes)
+  @UseMiddleware(hasToken)
   async createOrder(
     @Arg('input') input: CreateOrderFields,
     @Ctx('user') user: Payload
   ): Promise<OrderTypes> {
-    /* Verificar si hay un token válido */
-    if (!user) throw new Error('Token invalid')
-
     const { client, order, status, total } = input
 
     /* Vefificar si el cliente existe */
