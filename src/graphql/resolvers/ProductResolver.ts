@@ -1,4 +1,4 @@
-import { ProductType, Product } from '../../models'
+import { ProductTypes, Product } from '../../models'
 import {
   Arg,
   Args,
@@ -38,12 +38,12 @@ class UpdateProductFields {
 
 @Resolver()
 class ProductResolver {
-  @Query(() => [ProductType])
+  @Query(() => [ProductTypes])
   async getProducts() {
     return await Product.find({})
   }
 
-  @Query(() => ProductType)
+  @Query(() => ProductTypes)
   async getProductById(@Arg('id') id: string) {
     const product = await Product.findById(id)
 
@@ -54,12 +54,12 @@ class ProductResolver {
     return product
   }
 
-  @Mutation(() => ProductType)
+  @Mutation(() => ProductTypes)
   async deleteProductById(@Arg('id') id: string) {
     return await Product.findByIdAndDelete(id)
   }
 
-  @Mutation(() => ProductType)
+  @Mutation(() => ProductTypes)
   async createProduct(@Args() { name, quantity, price }: NewProductFields) {
     return await Product.create({
       createdAt: new Date(),
@@ -69,7 +69,7 @@ class ProductResolver {
     })
   }
 
-  @Mutation(() => ProductType)
+  @Mutation(() => ProductTypes)
   async updateProductById(
     @Arg('id') id: string,
     @Arg('input') { name, quantity, price }: UpdateProductFields

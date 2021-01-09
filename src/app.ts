@@ -5,16 +5,17 @@ import { verifyToken } from './utils/jwtMethods'
 
 /* Resolvers */
 import {
-  UserResolver,
+  ClientResolver,
+  OrderResolver,
   ProductResolver,
-  ClientResolver
+  UserResolver
 } from './graphql/resolvers'
 
 async function startServer() {
   await db()
   const server = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver, ProductResolver, ClientResolver]
+      resolvers: [ClientResolver, UserResolver, OrderResolver, ProductResolver]
     }),
     context: ({ req }) => {
       const accessToken = req.headers.authorization

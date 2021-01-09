@@ -50,8 +50,8 @@ class UpdateClientFields {
 
 @Resolver()
 class ClientResolver {
-  @Query(() => [ClientTypes])
-  async getClientsByUser(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
+  @Query(() => [ClientTypes], { description: 'Get clients by token / user' })
+  async getMyClients(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
     if (!user) throw new Error('Token invalid')
     const id = user.id
 
@@ -65,8 +65,8 @@ class ClientResolver {
     })
   }
 
-  @Query(() => [ClientTypes])
-  async getClients(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
+  @Query(() => [ClientTypes], { description: 'Get all clients' })
+  async getAllClients(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
     if (!user) throw new Error('Token invalid')
 
     return new Promise((resolve, reject) => {
@@ -78,7 +78,7 @@ class ClientResolver {
         })
     })
   }
-  @Query(() => ClientTypes)
+  @Query(() => ClientTypes, { description: 'Get client by id' })
   async getClientById(
     @Arg('id') id: string,
     @Ctx('user') user: Payload
@@ -105,7 +105,7 @@ class ClientResolver {
     })
   }
 
-  @Mutation(() => ClientTypes)
+  @Mutation(() => ClientTypes, { description: 'Create a new client' })
   async createClient(
     @Arg('input') input: CreateClientFields,
     @Ctx('user') user: Payload
@@ -129,7 +129,7 @@ class ClientResolver {
       })
   }
 
-  @Mutation(() => ClientTypes)
+  @Mutation(() => ClientTypes, { description: 'Update a client by id' })
   async updateClientById(
     @Arg('id') id: string,
     @Arg('input') input: UpdateClientFields,
@@ -167,7 +167,7 @@ class ClientResolver {
     return updatedClient
   }
 
-  @Mutation(() => ClientTypes)
+  @Mutation(() => ClientTypes, { description: 'Delete a client by id' })
   async deleteClientById(@Arg('id') id: string, @Ctx('user') user: Payload) {
     /* Verificar si hay un token válido */
     if (!user) throw new Error('Token invalid')

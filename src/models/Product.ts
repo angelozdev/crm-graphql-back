@@ -1,5 +1,5 @@
 import { Field, Float, ID, Int, ObjectType } from 'type-graphql'
-import { Document, model, ObjectId, Schema } from 'mongoose'
+import { Document, model, Schema } from 'mongoose'
 
 export const ProductSchema = new Schema(
   {
@@ -24,7 +24,7 @@ export const ProductSchema = new Schema(
 )
 
 @ObjectType()
-export class ProductType extends Document {
+export class ProductTypes extends Document {
   @Field(() => ID)
   id: String
 
@@ -44,4 +44,4 @@ export class ProductType extends Document {
   updatedAt: Date
 }
 
-export default model<ProductType>('Product', ProductSchema, 'products')
+export default model<ProductTypes>('Product', ProductSchema, 'products')
