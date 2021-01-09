@@ -7,7 +7,6 @@ import {
   ID,
   InputType,
   Int,
-  MiddlewareFn,
   Mutation,
   Query,
   registerEnumType,
@@ -16,6 +15,7 @@ import {
 } from 'type-graphql'
 import { StatusesOrder } from '../../types'
 import { Payload } from 'utils/jwtMethods'
+import { hasToken } from '../middlewares'
 
 registerEnumType(StatusesOrder, { name: 'StatusesOrder' })
 
@@ -43,12 +43,6 @@ class CreateOrderFields {
   status: StatusesOrder
 }
 
-const hasToken: MiddlewareFn<{ user: Payload }> = ({ context }, next) => {
-  if (!context.user) throw new Error('Token invalid')
-
-  return next()
-}
-
 @Resolver()
 class OrderResolver {
   @Query(() => [OrderTypes])
@@ -56,6 +50,18 @@ class OrderResolver {
   async getAllOrders(): Promise<OrderTypes[]> {
     try {
       return await Order.find({})
+    } catch (err) {
+      console.error(err.message)
+      return err
+    }
+  }
+
+  @Query(() => [OrderTypes])
+  @UseMiddleware(hasToken)
+  async getMyOrders(@Ctx('user') user: Payload): Promise<OrderTypes[]> {
+    try {
+      const { id } = user
+      return await Order.find({ seller: id })
     } catch (err) {
       console.error(err.message)
       return err

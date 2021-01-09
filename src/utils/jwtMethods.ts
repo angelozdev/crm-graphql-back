@@ -1,6 +1,7 @@
 import config from '../config'
 import { UserType } from '../models'
 import jwt from 'jsonwebtoken'
+import { ObjectId } from 'mongoose'
 
 export interface Payload {
   id: string

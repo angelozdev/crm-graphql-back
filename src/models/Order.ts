@@ -64,7 +64,7 @@ export class OrderTypes extends Document {
   client: Schema.Types.ObjectId
 
   @Field(() => ID)
-  seller: Schema.Types.ObjectId
+  seller: Schema.Types.ObjectId | string
 
   @Field(() => StatusesOrder)
   status: StatusesOrder
