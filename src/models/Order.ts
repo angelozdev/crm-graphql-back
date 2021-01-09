@@ -4,7 +4,7 @@ import { StatusesOrder } from '../types'
 
 export const OrderSchema = new Schema(
   {
-    order: {
+    products: {
       type: [
         {
           productId: {
@@ -41,7 +41,7 @@ export const OrderSchema = new Schema(
 )
 
 @ObjectType()
-export class OrderType {
+export class ProductsType {
   @Field(() => ID)
   productId: Schema.Types.ObjectId
 
@@ -54,8 +54,8 @@ export class OrderTypes extends Document {
   @Field(() => ID)
   id: Schema.Types.ObjectId
 
-  @Field(() => [OrderType])
-  order: OrderType[]
+  @Field(() => [ProductsType])
+  products: any[]
 
   @Field(() => Float)
   total: number

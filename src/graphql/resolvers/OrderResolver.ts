@@ -1,4 +1,4 @@
-import { Client, Order, OrderTypes, Product } from '../../models'
+import { Client, Order, OrderTypes, Product, User } from '../../models'
 import { Schema } from 'mongoose'
 import {
   Arg,
@@ -7,7 +7,6 @@ import {
   ID,
   InputType,
   Int,
-  MiddlewareFn,
   Mutation,
   Query,
   registerEnumType,
@@ -21,7 +20,7 @@ registerEnumType(StatusesOrder, { name: 'StatusesOrder' })
 
 /* INPUTS */
 @InputType()
-class OrderFields {
+class CreateProductsFields {
   @Field(() => ID)
   productId: Schema.Types.ObjectId
 
@@ -31,8 +30,8 @@ class OrderFields {
 
 @InputType()
 class CreateOrderFields {
-  @Field(() => [OrderFields])
-  order: OrderFields[]
+  @Field(() => [CreateProductsFields])
+  products: CreateProductsFields[]
 
   @Field(() => Int)
   total: number
@@ -42,6 +41,23 @@ class CreateOrderFields {
 
   @Field(() => StatusesOrder)
   status: StatusesOrder
+}
+
+@InputType()
+class UpdateOrderFields {
+  @Field(() => [CreateProductsFields], { nullable: true })
+  products?: CreateProductsFields[]
+
+  @Field(() => Int, { nullable: true })
+  total?: number
+
+  @Field(() => ID, { nullable: true })
+  client?: Schema.Types.ObjectId
+
+  @Field(() => StatusesOrder, { nullable: true })
+  status?: StatusesOrder
+
+  id: string
 }
 
 /* RESOLVER */
@@ -95,7 +111,7 @@ class OrderResolver {
     @Arg('input') input: CreateOrderFields,
     @Ctx('user') user: Payload
   ): Promise<OrderTypes> {
-    const { client, order, status, total } = input
+    const { client, products, status, total } = input
 
     /* Vefificar si el cliente existe */
     const clientExists = await Client.findById(client)
@@ -108,7 +124,7 @@ class OrderResolver {
     }
 
     /* Revisar stock */
-    for await (const p of input.order) {
+    for await (const p of input.products) {
       const { productId } = p
       const product = await Product.findById(productId)
 
@@ -124,13 +140,64 @@ class OrderResolver {
     /* Crear el pedido */
     const newOrder = new Order({
       client,
-      order,
+      products,
       status,
       total,
       seller: user.id
     })
 
     return await newOrder.save()
+  }
+
+  @Mutation(() => OrderTypes)
+  @UseMiddleware(hasToken)
+  async updateOrderById(
+    @Arg('id') orderId: string,
+    @Arg('input') input: UpdateOrderFields,
+    @Ctx('user') user: Payload
+  ): Promise<OrderTypes> {
+    const { status, total, client, products } = input
+
+    // Si el perdido existe
+    const order = await Order.findById(orderId)
+    if (!order) throw new Error('Order not found')
+
+    // Si el cliente existe
+    const seller = await User.findById(order.seller)
+    if (!seller) throw new Error('Seller not found')
+
+    // Si el cliente y el pedido pertenecen el mismo verdedor
+    if (user.id !== seller.id.toString()) {
+      new Error('Credentials invalid')
+    }
+
+    // Revisar el stock
+    for await (const p of order.products) {
+      const product = await Product.findById(p.productId)
+
+      if (!product) throw new Error('Product not found')
+      if (product.quantity < p.quantity) {
+        throw new Error('Quantity invalid')
+      } else {
+        product.quantity -= p.quantity
+
+        await product.save()
+      }
+    }
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        status: status || order.status,
+        total: total || order.total,
+        client: client || order.client,
+        products: products || order.products || []
+      },
+      { new: true }
+    )
+
+    if (!updatedOrder) throw new Error('Order not found')
+
+    return updatedOrder
   }
 }
 
