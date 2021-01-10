@@ -23,6 +23,8 @@ export const ProductSchema = new Schema(
   { timestamps: { createdAt: true, updatedAt: true } }
 )
 
+ProductSchema.index({ name: 'text' })
+
 @ObjectType()
 export class ProductTypes extends Document {
   @Field(() => ID)

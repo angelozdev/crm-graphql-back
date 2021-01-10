@@ -103,7 +103,7 @@ class ClientResolver {
 
   @Query(() => [TopClient])
   @UseMiddleware(hasToken)
-  async getTopClients(): Promise<any> {
+  async getTopClients(): Promise<TopClient[]> {
     const clients = await Order.aggregate<TopClient>([
       {
         $match: { status: StatusesOrder.COMPLETED }

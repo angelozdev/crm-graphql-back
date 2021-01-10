@@ -12,6 +12,7 @@ import {
   Resolver
 } from 'type-graphql'
 
+/* ARGS */
 @ArgsType()
 class NewProductFields {
   @Field()
@@ -24,6 +25,7 @@ class NewProductFields {
   price: number
 }
 
+/* INPUTS */
 @InputType()
 class UpdateProductFields {
   @Field({ nullable: true })
@@ -36,8 +38,10 @@ class UpdateProductFields {
   price: number
 }
 
+/* RESOLVER */
 @Resolver()
 class ProductResolver {
+  /* QUERIES */
   @Query(() => [ProductTypes])
   async getProducts() {
     return await Product.find({})
@@ -54,6 +58,16 @@ class ProductResolver {
     return product
   }
 
+  @Query(() => [ProductTypes])
+  async getProductsByName(@Arg('name') name: string) {
+    const foundProducts = await Product.find({
+      $text: { $search: name }
+    }).limit(10)
+
+    return foundProducts
+  }
+
+  /* MUTATIONS */
   @Mutation(() => ProductTypes)
   async deleteProductById(@Arg('id') id: string) {
     return await Product.findByIdAndDelete(id)

@@ -72,7 +72,7 @@ class UserResolver {
   }
 
   @Query(() => [TopSeller])
-  async getTopSellers() {
+  async getTopSellers(): Promise<TopSeller[]> {
     const sellers = await Order.aggregate<TopSeller>([
       {
         $match: { status: StatusesOrder.COMPLETED }
@@ -99,8 +99,6 @@ class UserResolver {
         $limit: 10
       }
     ])
-
-    console.log(sellers[0].seller)
 
     return sellers
   }
