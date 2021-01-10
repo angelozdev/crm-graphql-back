@@ -104,6 +104,17 @@ class OrderResolver {
     return order
   }
 
+  @Query(() => [OrderTypes])
+  @UseMiddleware(hasToken)
+  async getOrdersByStatus(
+    @Arg('status', () => StatusesOrder) status: StatusesOrder,
+    @Ctx('user') user: Payload
+  ): Promise<OrderTypes[]> {
+    const orders = await Order.find({ seller: user.id, status })
+
+    return orders
+  }
+
   /* MUTATIONS */
   @Mutation(() => OrderTypes)
   @UseMiddleware(hasToken)
