@@ -3,17 +3,22 @@ import {
   Args,
   ArgsType,
   Field,
+  Float,
+  ID,
   InputType,
+  Int,
   Mutation,
   ObjectType,
   Query,
   Resolver
 } from 'type-graphql'
 
-import { UserType, User } from '../../models'
+import { UserType, User, Order } from '../../models'
 import bcrypt from 'bcryptjs'
 import { createToken, verifyToken } from '../../utils/jwtMethods'
+import { StatusesOrder } from '../../types'
 
+/* INPUTS */
 @InputType()
 class createNewUserFields {
   @Field()
@@ -29,15 +34,78 @@ class createNewUserFields {
   password: string
 }
 
+/* TYPES */
 @ObjectType()
 class Token {
   @Field()
-  accessToken: String
+  accessToken: string
 }
 
-/* Main resolver */
+@ObjectType()
+class TopSeller {
+  @Field(() => [UserType])
+  seller: UserType[]
+
+  @Field(() => Float)
+  total: number
+
+  @Field(() => ID)
+  _id: string
+
+  @Field(() => Int)
+  totalOrders: number
+}
+
+/* RESOLVER */
 @Resolver()
 class UserResolver {
+  /* QUERIES */
+  @Query(() => [UserType])
+  async getUsers() {
+    return await User.find({})
+  }
+
+  @Query(() => UserType)
+  async getUserByToken(@Arg('token') accessToken: string) {
+    const { id } = verifyToken(accessToken)
+    return await User.findById(id)
+  }
+
+  @Query(() => [TopSeller])
+  async getTopSellers() {
+    const sellers = await Order.aggregate<TopSeller>([
+      {
+        $match: { status: StatusesOrder.COMPLETED }
+      },
+      {
+        $group: {
+          _id: '$seller',
+          total: { $sum: '$total' },
+          totalOrders: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'seller'
+        }
+      },
+      {
+        $sort: { total: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ])
+
+    console.log(sellers[0].seller)
+
+    return sellers
+  }
+
+  /* MUTATIONS */
   @Mutation(() => UserType)
   async createUser(
     @Arg('createNewUserFields')
@@ -49,17 +117,6 @@ class UserResolver {
       first_name,
       last_name
     })
-  }
-
-  @Query(() => [UserType])
-  async getUsers() {
-    return await User.find({})
-  }
-
-  @Query(() => UserType)
-  async getUserByToken(@Arg('token') accessToken: string) {
-    const { id } = verifyToken(accessToken)
-    return await User.findById(id)
   }
 
   @Mutation(() => UserType)

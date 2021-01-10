@@ -125,6 +125,9 @@ class ClientResolver {
       },
       {
         $sort: { total: -1 }
+      },
+      {
+        $limit: 10
       }
     ])
 
