@@ -1,6 +1,8 @@
 import { Field, Float, ID, Int, ObjectType } from 'type-graphql'
 import { Document, model, Schema } from 'mongoose'
 import { StatusesOrder } from '../types'
+import { UserType } from '../models'
+import { ClientTypes } from './Client'
 
 export const OrderSchema = new Schema(
   {
@@ -60,10 +62,10 @@ export class OrderTypes extends Document {
   @Field(() => Float)
   total: number
 
-  @Field(() => ID)
+  @Field(() => ClientTypes)
   client: Schema.Types.ObjectId
 
-  @Field(() => ID)
+  @Field(() => UserType)
   seller: Schema.Types.ObjectId | string
 
   @Field(() => StatusesOrder)

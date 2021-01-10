@@ -35,7 +35,7 @@ export const ClientSchema = new Schema(
       trim: true
     },
 
-    sellerId: {
+    seller: {
       type: Schema.Types.ObjectId,
       required: true,
       trim: true,
@@ -48,7 +48,7 @@ export const ClientSchema = new Schema(
 @ObjectType()
 export class ClientTypes extends Document {
   @Field(() => ID)
-  id: string
+  id: Schema.Types.ObjectId
 
   @Field()
   first_name: string
@@ -68,8 +68,8 @@ export class ClientTypes extends Document {
   @Field(() => String)
   createdAt: Date
 
-  @Field(() => UserType || ID)
-  sellerId: string | UserType
+  @Field(() => UserType)
+  seller: string
 }
 
 export default model<ClientTypes>('Client', ClientSchema, 'clients')

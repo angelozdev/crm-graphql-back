@@ -2,16 +2,23 @@ import {
   Arg,
   Ctx,
   Field,
+  Float,
+  ID,
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
-  Resolver
+  Resolver,
+  UseMiddleware
 } from 'type-graphql'
 import { ObjectID } from 'mongodb'
-import { ClientTypes, Client } from '../../models'
-import { Payload } from '../../types'
+import { ClientTypes, Client, Order } from '../../models'
+import { Payload, StatusesOrder } from '../../types'
+import { hasToken } from './../middlewares'
+import { Schema } from 'mongoose'
 
+/* INPUTS */
 @InputType()
 class CreateClientFields {
   @Field()
@@ -48,16 +55,32 @@ class UpdateClientFields {
   phone_number: number
 }
 
+/* ADDITIONAL TYPES */
+@ObjectType()
+class TopClient {
+  @Field(() => [ClientTypes])
+  client: ClientTypes[]
+
+  @Field(() => Float)
+  total: number
+
+  @Field(() => ID)
+  _id: Schema.Types.ObjectId
+
+  @Field(() => Number)
+  totalOrders: number
+}
+
+/* RESOLVER */
 @Resolver()
 class ClientResolver {
+  /* QUERIES */
   @Query(() => [ClientTypes], { description: 'Get clients by token / user' })
+  @UseMiddleware(hasToken)
   async getMyClients(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
-    if (!user) throw new Error('Token invalid')
-    const id = user.id
-
     return new Promise((resolve, reject) => {
-      Client.find({ sellerId: id })
-        .populate('sellerId')
+      Client.find({ seller: user.id })
+        .populate('seller')
         .exec((err, docs) => {
           if (err) return reject(err)
           resolve(docs)
@@ -66,26 +89,54 @@ class ClientResolver {
   }
 
   @Query(() => [ClientTypes], { description: 'Get all clients' })
-  async getAllClients(@Ctx('user') user: Payload): Promise<ClientTypes[]> {
-    if (!user) throw new Error('Token invalid')
-
+  @UseMiddleware(hasToken)
+  async getAllClients(): Promise<ClientTypes[]> {
     return new Promise((resolve, reject) => {
       Client.find()
-        .populate('sellerId')
+        .populate('seller')
         .exec((err, docs) => {
           if (err) return reject(err)
           resolve(docs)
         })
     })
   }
+
+  @Query(() => [TopClient])
+  @UseMiddleware(hasToken)
+  async getTopClients(): Promise<any> {
+    const clients = await Order.aggregate<TopClient>([
+      {
+        $match: { status: StatusesOrder.COMPLETED }
+      },
+      {
+        $group: {
+          _id: '$client',
+          total: { $sum: '$total' },
+          totalOrders: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: 'clients',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'client'
+        }
+      },
+      {
+        $sort: { total: -1 }
+      }
+    ])
+
+    return clients
+  }
+
   @Query(() => ClientTypes, { description: 'Get client by id' })
+  @UseMiddleware(hasToken)
   async getClientById(
     @Arg('id') id: string,
     @Ctx('user') user: Payload
   ): Promise<ClientTypes> {
-    /* Comprobar si hay un token válido */
-    if (!user) throw new Error('Token invalid')
-
     /* Buscar el cliente por id */
     const client = await Client.findById(id)
 
@@ -93,25 +144,27 @@ class ClientResolver {
     if (!client) throw new Error('Client not found')
 
     /* Si no coincide el id del token con el id del seller del cliente lanzar error */
-    if (client.sellerId.toString() !== user.id) {
+    if (client.seller.toString() !== user.id) {
       throw new Error('Invalid credentials')
     }
 
     return new Promise((resolve, reject) => {
-      client.populate('sellerId').execPopulate((err, docs) => {
+      client.populate('seller').execPopulate((err, docs) => {
         if (err) return reject(err)
         resolve(docs)
       })
     })
   }
 
+  @Query(() => [ClientTypes])
+
+  /* MUTATIONS */
   @Mutation(() => ClientTypes, { description: 'Create a new client' })
+  @UseMiddleware(hasToken)
   async createClient(
     @Arg('input') input: CreateClientFields,
     @Ctx('user') user: Payload
   ): Promise<ClientTypes> {
-    if (!user) throw new Error('Token invalid')
-
     const { company, email, first_name, last_name, phone_number } = input
 
     return Client.create({
@@ -120,7 +173,7 @@ class ClientResolver {
       first_name,
       last_name,
       phone_number,
-      sellerId: new ObjectID(user.id)
+      seller: new ObjectID(user.id)
     })
       .then((client) => client)
       .catch((err) => {
@@ -130,14 +183,12 @@ class ClientResolver {
   }
 
   @Mutation(() => ClientTypes, { description: 'Update a client by id' })
+  @UseMiddleware(hasToken)
   async updateClientById(
     @Arg('id') id: string,
     @Arg('input') input: UpdateClientFields,
     @Ctx('user') user: Payload
   ): Promise<ClientTypes> {
-    /* Comprobar si hay un token válido */
-    if (!user) throw new Error('Token invalid')
-
     /* Encontrar el usuario por id */
     const { company, first_name, last_name, phone_number, email } = input
     const client = await Client.findById(id)
@@ -146,7 +197,7 @@ class ClientResolver {
     if (!client) throw new Error('Client not found')
 
     /* Si no es el usuario que edita sus propios clientes salta un error */
-    if (client.sellerId.toString() !== user.id) {
+    if (client.seller.toString() !== user.id) {
       throw new Error('Invalid credentials')
     }
 
@@ -168,10 +219,8 @@ class ClientResolver {
   }
 
   @Mutation(() => ClientTypes, { description: 'Delete a client by id' })
+  @UseMiddleware(hasToken)
   async deleteClientById(@Arg('id') id: string, @Ctx('user') user: Payload) {
-    /* Verificar si hay un token válido */
-    if (!user) throw new Error('Token invalid')
-
     /* Encontrar el usuario que se quiere eliminar */
     const client = await Client.findById(id)
 
@@ -179,7 +228,7 @@ class ClientResolver {
     if (!client) throw new Error('Client not found')
 
     /* Si no el cliente de este vendedor mostrar un error */
-    if (client.sellerId.toString() !== user.id) {
+    if (client.seller.toString() !== user.id) {
       throw new Error('Invalid credentials')
     }
 

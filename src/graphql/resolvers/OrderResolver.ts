@@ -68,7 +68,7 @@ class OrderResolver {
   @UseMiddleware(hasToken)
   async getAllOrders(): Promise<OrderTypes[]> {
     try {
-      return await Order.find({})
+      return await Order.find({}).populate('seller').populate('client').exec()
     } catch (err) {
       console.error(err.message)
       return err
@@ -81,6 +81,9 @@ class OrderResolver {
     try {
       const { id } = user
       return await Order.find({ seller: id })
+        .populate('client')
+        .populate('seller')
+        .exec()
     } catch (err) {
       console.error(err.message)
       return err
@@ -98,10 +101,13 @@ class OrderResolver {
     if (!order) throw new Error('Order not found')
 
     if (order.seller.toString() !== user.id) {
-      throw new Error('Credentials invalid')
+      throw new Error('Invalid credentials')
     }
 
     return order
+      .populate({ path: 'client' })
+      .populate({ path: 'seller' })
+      .execPopulate()
   }
 
   @Query(() => [OrderTypes])
@@ -111,6 +117,9 @@ class OrderResolver {
     @Ctx('user') user: Payload
   ): Promise<OrderTypes[]> {
     const orders = await Order.find({ seller: user.id, status })
+      .populate('client')
+      .populate('seller')
+      .exec()
 
     return orders
   }
@@ -130,7 +139,7 @@ class OrderResolver {
     if (!clientExists) throw new Error('Client not found')
 
     /* Verificar si el usuario es el mismo */
-    if (clientExists.sellerId.toString() !== user.id) {
+    if (clientExists.seller.toString() !== user.id) {
       throw new Error('Invalid credentials')
     }
 
@@ -157,7 +166,10 @@ class OrderResolver {
       seller: user.id
     })
 
-    return await newOrder.save()
+    return await (await newOrder.save())
+      .populate({ path: 'client' })
+      .populate({ path: 'seller' })
+      .execPopulate()
   }
 
   @Mutation(() => OrderTypes)
@@ -179,7 +191,7 @@ class OrderResolver {
 
     // Si el cliente y el pedido pertenecen el mismo verdedor
     if (user.id !== seller.id.toString()) {
-      new Error('Credentials invalid')
+      throw new Error('Invalid credentials')
     }
 
     // Revisar el stock
@@ -207,6 +219,9 @@ class OrderResolver {
       },
       { new: true }
     )
+      .populate('client')
+      .populate('seller')
+      .exec()
 
     if (!updatedOrder) throw new Error('Order not found')
 
@@ -225,10 +240,13 @@ class OrderResolver {
 
     // Verificar que el vendedor es el mismo que està loggeado
     if (order.seller.toString() !== user.id) {
-      throw new Error('Credentials invalid')
+      throw new Error('Invalid credentials')
     }
 
     const deletedOrder = await Order.findByIdAndDelete(id)
+      .populate('seller')
+      .populate('client')
+      .exec()
     if (!deletedOrder) throw new Error('Order not found')
 
     return deletedOrder
