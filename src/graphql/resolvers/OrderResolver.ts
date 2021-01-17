@@ -13,8 +13,9 @@ import {
   Resolver,
   UseMiddleware
 } from 'type-graphql'
-import { StatusesOrder, Payload } from '../../types'
+import { StatusesOrder, Payload, Errors } from '../../types'
 import { hasToken } from '../middlewares'
+import { handleError } from '../../utils/handleConsole'
 
 registerEnumType(StatusesOrder, { name: 'StatusesOrder' })
 
@@ -98,10 +99,10 @@ class OrderResolver {
   ): Promise<OrderTypes> {
     const order = await Order.findById(id)
 
-    if (!order) throw new Error('Order not found')
+    if (!order) return handleError(Errors.ORDER_NOT_FOUND)
 
     if (order.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     return order
@@ -136,11 +137,11 @@ class OrderResolver {
     /* Vefificar si el cliente existe */
     const clientExists = await Client.findById(client)
 
-    if (!clientExists) throw new Error('Client not found')
+    if (!clientExists) return handleError(Errors.CLIENT_NOT_FOUND)
 
     /* Verificar si el usuario es el mismo */
     if (clientExists.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     /* Revisar stock */
@@ -148,7 +149,7 @@ class OrderResolver {
       const { productId } = p
       const product = await Product.findById(productId)
 
-      if (!product) throw new Error('Product not found')
+      if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
       if (product.quantity < p.quantity) {
         throw new Error(`Quantity not available for ${product.name}`)
       } else {
@@ -183,15 +184,15 @@ class OrderResolver {
 
     // Si el perdido existe
     const order = await Order.findById(orderId)
-    if (!order) throw new Error('Order not found')
+    if (!order) return handleError(Errors.ORDER_NOT_FOUND)
 
     // Si el cliente existe
     const seller = await User.findById(order.seller)
-    if (!seller) throw new Error('Seller not found')
+    if (!seller) return handleError(Errors.USER_NOT_FOUND)
 
     // Si el cliente y el pedido pertenecen el mismo verdedor
     if (user.id !== seller.id.toString()) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     // Revisar el stock
@@ -199,7 +200,7 @@ class OrderResolver {
       for await (const p of products) {
         const product = await Product.findById(p.productId)
 
-        if (!product) throw new Error('Product not found')
+        if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
         if (product.quantity < p.quantity) {
           throw new Error('Quantity invalid')
         } else {
@@ -223,7 +224,7 @@ class OrderResolver {
       .populate('seller')
       .exec()
 
-    if (!updatedOrder) throw new Error('Order not found')
+    if (!updatedOrder) return handleError(Errors.ORDER_NOT_FOUND)
 
     return updatedOrder
   }
@@ -236,18 +237,18 @@ class OrderResolver {
   ): Promise<OrderTypes> {
     // Verificar que el pedido existe
     const order = await Order.findById(id)
-    if (!order) throw new Error('Order not found')
+    if (!order) return handleError(Errors.ORDER_NOT_FOUND)
 
     // Verificar que el vendedor es el mismo que està loggeado
     if (order.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     const deletedOrder = await Order.findByIdAndDelete(id)
       .populate('seller')
       .populate('client')
       .exec()
-    if (!deletedOrder) throw new Error('Order not found')
+    if (!deletedOrder) return handleError(Errors.ORDER_NOT_FOUND)
 
     return deletedOrder
   }

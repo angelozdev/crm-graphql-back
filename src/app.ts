@@ -18,22 +18,17 @@ async function startServer() {
       resolvers: [ClientResolver, UserResolver, OrderResolver, ProductResolver]
     }),
     context: ({ req }) => {
-      const accessToken = req.headers.authorization
+      const accessToken = req.headers.authorization || ''
+      const tokenWithoutBearer = accessToken.replace('Bearer ', '')
 
-      /* if (!accessToken) {
-        throw new Error('Token is not valid')
-      } */
       try {
-        const user = verifyToken(accessToken || '')
+        const user = verifyToken(tokenWithoutBearer || '')
+
         return { user }
       } catch (error) {
         console.error(error.message)
         return error
       }
-
-      /* if (!user) {
-        throw new Error('Token is not valid')
-      } */
     }
   })
 

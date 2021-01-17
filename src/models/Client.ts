@@ -62,8 +62,8 @@ export class ClientTypes extends Document {
   @Field()
   email: string
 
-  @Field(() => Int, { nullable: true })
-  phone_number: number
+  @Field(() => String, { nullable: true })
+  phone_number: string
 
   @Field(() => String)
   createdAt: Date

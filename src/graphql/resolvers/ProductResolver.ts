@@ -11,6 +11,8 @@ import {
   Query,
   Resolver
 } from 'type-graphql'
+import { Errors } from '../../types'
+import { handleError } from '../../utils/handleConsole'
 
 /* ARGS */
 @ArgsType()
@@ -52,7 +54,7 @@ class ProductResolver {
     const product = await Product.findById(id)
 
     if (!product) {
-      throw new Error('Product not found')
+      return handleError(Errors.PRODUCT_NOT_FOUND)
     }
 
     return product
@@ -91,7 +93,7 @@ class ProductResolver {
     const product = await Product.findById(id)
 
     if (!product) {
-      throw new Error('Product not found')
+      return handleError(Errors.PRODUCT_NOT_FOUND)
     }
 
     return await Product.findByIdAndUpdate(

@@ -1,13 +1,14 @@
 import config from '../config'
 import { UserType } from '../models'
 import jwt from 'jsonwebtoken'
-import { Payload } from '../types'
+import { Errors, Payload } from '../types'
+import { handleError } from './handleConsole'
 
 export function verifyToken(token: string): Payload {
   const secretWord = config.jwt.secret
   if (!secretWord) {
     console.error('The secret word does not exist')
-    throw new Error('Internal server error')
+    return handleError(Errors.INTERNAL_SERVER_ERROR)
   }
 
   const payload: Payload = jwt.verify(token, secretWord) as Payload
@@ -22,7 +23,7 @@ export function createToken(
   const secretWord = config.jwt.secret
   if (!secretWord) {
     console.error('The secret word does not exist')
-    throw new Error('Internal server error')
+    return handleError(Errors.INTERNAL_SERVER_ERROR)
   }
   const { id, email, first_name, last_name } = user
 

@@ -14,9 +14,10 @@ import {
 } from 'type-graphql'
 import { ObjectID } from 'mongodb'
 import { ClientTypes, Client, Order } from '../../models'
-import { Payload, StatusesOrder } from '../../types'
+import { Errors, Payload, StatusesOrder } from '../../types'
 import { hasToken } from './../middlewares'
 import { Schema } from 'mongoose'
+import { handleError } from '../../utils/handleConsole'
 
 /* INPUTS */
 @InputType()
@@ -33,8 +34,8 @@ class CreateClientFields {
   @Field()
   email: string
 
-  @Field(() => Int, { nullable: true })
-  phone_number: number
+  @Field({ nullable: true })
+  phone_number: string
 }
 
 @InputType()
@@ -51,8 +52,8 @@ class UpdateClientFields {
   @Field({ nullable: true })
   email: string
 
-  @Field(() => Int, { nullable: true })
-  phone_number: number
+  @Field({ nullable: true })
+  phone_number: string
 }
 
 /* ADDITIONAL TYPES */
@@ -144,11 +145,11 @@ class ClientResolver {
     const client = await Client.findById(id)
 
     /* Si no existe lanzar un error */
-    if (!client) throw new Error('Client not found')
+    if (!client) return handleError(Errors.CLIENT_NOT_FOUND)
 
     /* Si no coincide el id del token con el id del seller del cliente lanzar error */
     if (client.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     return new Promise((resolve, reject) => {
@@ -170,17 +171,21 @@ class ClientResolver {
   ): Promise<ClientTypes> {
     const { company, email, first_name, last_name, phone_number } = input
 
+    const existsClient = await Client.findOne({ email })
+
+    if (existsClient) return handleError(Errors.CLIENT_ALREADY_EXISTS)
+
     return Client.create({
       company,
       email,
       first_name,
       last_name,
-      phone_number,
+      phone_number: phone_number || null,
       seller: new ObjectID(user.id)
     })
       .then((client) => client)
       .catch((err) => {
-        console.error(err.message)
+        console.error(err)
         return err
       })
   }
@@ -197,11 +202,11 @@ class ClientResolver {
     const client = await Client.findById(id)
 
     /* Si no esxite el usuario salta un error */
-    if (!client) throw new Error('Client not found')
+    if (!client) return handleError(Errors.CLIENT_NOT_FOUND)
 
     /* Si no es el usuario que edita sus propios clientes salta un error */
     if (client.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     const fields = {
@@ -216,7 +221,7 @@ class ClientResolver {
       new: true
     })
 
-    if (!updatedClient) throw new Error('Client not found')
+    if (!updatedClient) return handleError(Errors.CLIENT_NOT_FOUND)
 
     return updatedClient
   }
@@ -228,17 +233,17 @@ class ClientResolver {
     const client = await Client.findById(id)
 
     /* Si no existe el usuario mostrar un error */
-    if (!client) throw new Error('Client not found')
+    if (!client) return handleError(Errors.CLIENT_NOT_FOUND)
 
     /* Si no el cliente de este vendedor mostrar un error */
     if (client.seller.toString() !== user.id) {
-      throw new Error('Invalid credentials')
+      return handleError(Errors.YOU_DO_NOT_HAVE_AUTHORIZATION)
     }
 
     /* Eliminar usuario */
     const deletedClient = await Client.findByIdAndDelete(id)
 
-    if (!deletedClient) throw new Error('Client not found')
+    if (!deletedClient) return handleError(Errors.CLIENT_NOT_FOUND)
 
     return deletedClient
   }

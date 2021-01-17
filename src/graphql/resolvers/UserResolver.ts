@@ -2,6 +2,7 @@ import {
   Arg,
   Args,
   ArgsType,
+  Ctx,
   Field,
   Float,
   ID,
@@ -16,7 +17,8 @@ import {
 import { UserType, User, Order } from '../../models'
 import bcrypt from 'bcryptjs'
 import { createToken, verifyToken } from '../../utils/jwtMethods'
-import { StatusesOrder } from '../../types'
+import { Errors, Payload, StatusesOrder } from '../../types'
+import { handleSuccess, handleError } from '../../utils/handleConsole'
 
 /* INPUTS */
 @InputType()
@@ -66,9 +68,8 @@ class UserResolver {
   }
 
   @Query(() => UserType)
-  async getUserByToken(@Arg('token') accessToken: string) {
-    const { id } = verifyToken(accessToken)
-    return await User.findById(id)
+  async getUserLogged(@Ctx('user') user: Payload) {
+    return await User.findById(user.id)
   }
 
   @Query(() => [TopSeller])
@@ -109,12 +110,15 @@ class UserResolver {
     @Arg('createNewUserFields')
     { email, last_name, first_name, password }: createNewUserFields
   ) {
-    return User.create({
+    const createdUser = await User.create({
       password: await bcrypt.hash(password, 15),
       email,
       first_name,
       last_name
     })
+
+    handleSuccess('User created', createdUser)
+    return createdUser
   }
 
   @Mutation(() => UserType)
@@ -128,17 +132,21 @@ class UserResolver {
 
     // If the user exists
     if (!user?.email || !user.password) {
-      throw new Error('User does not exist')
+      return handleError(Errors.USER_NOT_FOUND)
     }
 
     // Check passwords
     const doPasswordsMatch = await bcrypt.compare(password, user.password)
 
     if (!doPasswordsMatch) {
-      throw new Error('Passwords do not match')
+      return handleError(Errors.PASSWORDS_DO_NOT_MATCH)
     }
 
-    return { accessToken: createToken(user, '24h') }
+    const accessToken = createToken(user, '24h')
+
+    handleSuccess('User logged', { user, accessToken })
+
+    return { accessToken, user }
   }
 }
 

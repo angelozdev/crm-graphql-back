@@ -1,8 +1,9 @@
 import { MiddlewareFn } from 'type-graphql'
-import { Context } from '../../types'
+import { handleError } from '../../utils/handleConsole'
+import { Context, Errors } from '../../types'
 
 export const hasToken: MiddlewareFn<Context> = ({ context }, next) => {
-  if (!context.user) throw new Error('Token invalid')
+  if (!context.user) return handleError(Errors.TOKEN_INVALID)
 
   return next()
 }
