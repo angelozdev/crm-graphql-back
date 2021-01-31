@@ -21,7 +21,7 @@ class NewProductFields {
   name: string
 
   @Field(() => Int)
-  quantity: number
+  stock: number
 
   @Field(() => Float)
   price: number
@@ -34,7 +34,7 @@ class UpdateProductFields {
   name: string
 
   @Field(() => Int, { nullable: true })
-  quantity: number
+  stock: number
 
   @Field(() => Float, { nullable: true })
   price: number
@@ -76,19 +76,19 @@ class ProductResolver {
   }
 
   @Mutation(() => ProductTypes)
-  async createProduct(@Args() { name, quantity, price }: NewProductFields) {
+  async createProduct(@Args() { name, stock, price }: NewProductFields) {
     return await Product.create({
       createdAt: new Date(),
       name,
       price,
-      quantity
+      stock
     })
   }
 
   @Mutation(() => ProductTypes)
   async updateProductById(
     @Arg('id') id: string,
-    @Arg('input') { name, quantity, price }: UpdateProductFields
+    @Arg('input') { name, stock, price }: UpdateProductFields
   ) {
     const product = await Product.findById(id)
 
@@ -100,7 +100,7 @@ class ProductResolver {
       product,
       {
         name: name || product.name,
-        quantity: quantity || product.quantity,
+        stock: stock || product.stock,
         price: price || product.price
       },
       { new: true }

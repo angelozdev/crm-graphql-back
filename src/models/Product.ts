@@ -8,7 +8,7 @@ export const ProductSchema = new Schema(
       trim: true,
       required: true
     },
-    quantity: {
+    stock: {
       type: Number,
       default: 1,
       required: true,
@@ -34,7 +34,7 @@ export class ProductTypes extends Document {
   name: string
 
   @Field(() => Int)
-  quantity: number
+  stock: number
 
   @Field(() => Float)
   price: number

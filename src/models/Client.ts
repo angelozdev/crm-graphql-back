@@ -30,7 +30,7 @@ export const ClientSchema = new Schema(
     },
 
     phone_number: {
-      type: Number,
+      type: String,
       required: false,
       trim: true
     },

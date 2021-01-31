@@ -150,10 +150,10 @@ class OrderResolver {
       const product = await Product.findById(productId)
 
       if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
-      if (product.quantity < p.quantity) {
-        throw new Error(`Quantity not available for ${product.name}`)
+      if (product.stock < p.quantity) {
+        throw new Error(`Stock not available for ${product.name}`)
       } else {
-        product.quantity -= p.quantity
+        product.stock -= p.quantity
         await product.save()
       }
     }
@@ -201,10 +201,10 @@ class OrderResolver {
         const product = await Product.findById(p.productId)
 
         if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
-        if (product.quantity < p.quantity) {
+        if (product.stock < p.quantity) {
           throw new Error('Quantity invalid')
         } else {
-          product.quantity -= p.quantity
+          product.stock -= p.quantity
 
           await product.save()
         }
