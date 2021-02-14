@@ -3,13 +3,14 @@ import { Document, model, Schema } from 'mongoose'
 import { StatusesOrder } from '../types'
 import { UserType } from '../models'
 import { ClientTypes } from './Client'
+import { ProductTypes } from './Product'
 
 export const OrderSchema = new Schema(
   {
     products: {
       type: [
         {
-          productId: {
+          product: {
             type: Schema.Types.ObjectId,
             ref: 'Product',
             required: true
@@ -44,8 +45,8 @@ export const OrderSchema = new Schema(
 
 @ObjectType()
 export class ProductsType {
-  @Field(() => ID)
-  productId: Schema.Types.ObjectId
+  @Field(() => ProductTypes)
+  product: Schema.Types.ObjectId
 
   @Field(() => Int)
   quantity: number
@@ -57,7 +58,7 @@ export class OrderTypes extends Document {
   id: Schema.Types.ObjectId
 
   @Field(() => [ProductsType])
-  products: any[]
+  products: ProductsType[]
 
   @Field(() => Float)
   total: number

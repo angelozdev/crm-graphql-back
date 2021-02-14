@@ -23,7 +23,7 @@ registerEnumType(StatusesOrder, { name: 'StatusesOrder' })
 @InputType()
 class CreateProductsFields {
   @Field(() => ID)
-  productId: Schema.Types.ObjectId
+  product: Schema.Types.ObjectId
 
   @Field(() => Int)
   quantity: number
@@ -40,7 +40,7 @@ class CreateOrderFields {
   @Field(() => ID)
   client: Schema.Types.ObjectId
 
-  @Field(() => StatusesOrder)
+  @Field(() => StatusesOrder, { defaultValue: 'PENDING' })
   status: StatusesOrder
 }
 
@@ -69,7 +69,11 @@ class OrderResolver {
   @UseMiddleware(hasToken)
   async getAllOrders(): Promise<OrderTypes[]> {
     try {
-      return await Order.find({}).populate('seller').populate('client').exec()
+      return await Order.find({})
+        .populate('seller')
+        .populate('products.product')
+        .populate('client')
+        .exec()
     } catch (err) {
       console.error(err.message)
       return err
@@ -84,7 +88,14 @@ class OrderResolver {
       return await Order.find({ seller: id })
         .populate('client')
         .populate('seller')
+        .populate('products.product')
         .exec()
+        .then((data) => {
+          data.forEach((order) =>
+            order.products.forEach((order) => console.log(order))
+          )
+          return data
+        })
     } catch (err) {
       console.error(err.message)
       return err
@@ -108,6 +119,7 @@ class OrderResolver {
     return order
       .populate({ path: 'client' })
       .populate({ path: 'seller' })
+      .populate('products.product')
       .execPopulate()
   }
 
@@ -119,6 +131,7 @@ class OrderResolver {
   ): Promise<OrderTypes[]> {
     const orders = await Order.find({ seller: user.id, status })
       .populate('client')
+      .populate('products.product')
       .populate('seller')
       .exec()
 
@@ -146,15 +159,15 @@ class OrderResolver {
 
     /* Revisar stock */
     for await (const p of input.products) {
-      const { productId } = p
-      const product = await Product.findById(productId)
+      const { product } = p
+      const prod = await Product.findById(product)
 
-      if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
-      if (product.stock < p.quantity) {
-        throw new Error(`Stock not available for ${product.name}`)
+      if (!prod) return handleError(Errors.PRODUCT_NOT_FOUND)
+      if (prod.stock < p.quantity) {
+        throw handleError(Errors.STOCK_NOT_AVAILABLE)
       } else {
-        product.stock -= p.quantity
-        await product.save()
+        prod.stock -= p.quantity
+        await prod.save()
       }
     }
 
@@ -170,6 +183,7 @@ class OrderResolver {
     return await (await newOrder.save())
       .populate({ path: 'client' })
       .populate({ path: 'seller' })
+      .populate('products.product')
       .execPopulate()
   }
 
@@ -198,11 +212,11 @@ class OrderResolver {
     // Revisar el stock
     if (products) {
       for await (const p of products) {
-        const product = await Product.findById(p.productId)
+        const product = await Product.findById(p.product)
 
         if (!product) return handleError(Errors.PRODUCT_NOT_FOUND)
         if (product.stock < p.quantity) {
-          throw new Error('Quantity invalid')
+          throw handleError(Errors.STOCK_NOT_AVAILABLE)
         } else {
           product.stock -= p.quantity
 
@@ -222,6 +236,7 @@ class OrderResolver {
     )
       .populate('client')
       .populate('seller')
+      .populate('products.product')
       .exec()
 
     if (!updatedOrder) return handleError(Errors.ORDER_NOT_FOUND)
@@ -247,6 +262,7 @@ class OrderResolver {
     const deletedOrder = await Order.findByIdAndDelete(id)
       .populate('seller')
       .populate('client')
+      .populate('products.product')
       .exec()
     if (!deletedOrder) return handleError(Errors.ORDER_NOT_FOUND)
 

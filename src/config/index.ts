@@ -10,6 +10,9 @@ const config = {
   },
   jwt: {
     secret: process.env.JWT_SECRET_WORD
+  },
+  setup: {
+    port: process.env.PORT
   }
 }
 

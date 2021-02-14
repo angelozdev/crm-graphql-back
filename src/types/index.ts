@@ -14,7 +14,8 @@ export enum Errors {
   ORDER_NOT_FOUND = 'order_not_found',
   PRODUCT_NOT_FOUND = 'product_not_found',
   SELLER_NOT_FOUND = 'seller_not_found',
-  INTERNAL_SERVER_ERROR = 'internal_server_error'
+  INTERNAL_SERVER_ERROR = 'internal_server_error',
+  STOCK_NOT_AVAILABLE = 'stock_not_available'
 }
 
 export interface Payload {
